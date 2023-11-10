@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--MyBatis配置文件-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.shenjun.blog.dao.mapper.TagMapper">
+
+    <select id="listArchives" resultType="com.shenjun.blog.dao.dos.Archives">
+        select FROM_UNIXTIME(create_date / 1000, '%Y') as year,FROM_UNIXTIME(create_date/1000,'%m') as month,count(*) as count
+        from ms_article
+        group by year, month
+    </select>
+    <!-- List<Tag> findTagsByArticleId(Long articleId);-->
+    <select id="findTagsByArticleId" parameterType="long" resultType="com.shenjun.blog.dao.pojo.Tag">
+        select id, avatar, tag_name as tagName
+        from ms_tag
+        where id in
+              (select tag_id from ms_article_tag where article_id = #{articleId})
+    </select>
+
+
+    <select id="findHotsTagIds" resultType="java.lang.Long" parameterType="int">
+        select tag_id
+        from `ms_article_tag`
+        group by tag_id
+            /*conut(*) 不能有空格*/
+        order by count(*) desc limit #{limit}
+    </select>
+
+
+    <select id="findTagsByTagIds" resultType="com.shenjun.blog.dao.pojo.Tag"
+            parameterType="list">
+        select id, tag_name as tagName
+        from ms_tag where id in
+        <foreach collection="tagIds" item="tagId" separator="," open="(" close=")">
+            ${tagId}
+        </foreach>
+    </select>
+
+</mapper>
